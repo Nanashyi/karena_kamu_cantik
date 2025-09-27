@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>&lt;3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: '8bit';
+            src: url('fonts/8bit.ttf') format('truetype');
+        }
+
+        #custom-title-bar {
+            -webkit-app-region: drag;
+            height: 35px;
+            background-color: rgba(251, 223, 223, 0.5);
+            color: rgb(255, 220, 220);
+            font-size: 1.5em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            font-family: '8bit', cursive;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+        }
+
+        #window-controls {
+            display: flex;
+            -webkit-app-region: no-drag;
+        }
+
+        #window-controls button {
+            background: transparent;
+            border: none;
+            padding: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        #window-controls button img {
+            width: 20px;
+            height: 20px;
+            filter: brightness(0) invert(1);
+        }
+
+        #window-controls button:hover img {
+            filter: brightness(0.9) invert(1) drop-shadow(0 0 2px white);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            padding-top: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: '8bit', cursive;
+            color: white;
+            text-shadow: 2px 2px 4px #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fullscreen-gif {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            z-index: -1;
+        }
+
+        #lyrics {
+            font-size: 2.8em;
+            text-align: center;
+            background: rgba(251, 223, 223, 0.5);
+            padding: 30px;
+            border-radius: 15px;
+            min-width: 80%;
+            min-height: 100px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 15px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Audio Controls */
+        #audio-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(251, 223, 223, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        #audio-controls button {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: '8bit', cursive;
+            font-size: 12px;
+        }
+
+        #audio-controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #volume-control {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <img src="cute.gif" class="fullscreen-gif" alt="Cute GIF">
+
+    <div id="custom-title-bar">
+        <div class="title">Karena kamu CANTIK &lt;3
+            -Credit Nanashyi-
+        </div>
+        <div id="window-controls">
+            <button id="home-btn"><img src="assets/home.png"></button>
+            <button id="max-btn"><img src="assets/maximize.png"></button>
+            <button id="close-btn"><img src="assets/close.png"></button>
+        </div>
+    </div>
+
+    <div id="lyrics"><span id="text"></span><span class="cursor">|</span></div>
+
+    <!-- Audio Controls -->
+    <div id="audio-controls">
+        <button id="play-btn">▶ Play</button>
+        <button id="pause-btn">⏸ Pause</button>
+        <button id="restart-btn">🔄 Restart</button>
+        <input type="range" id="volume-control" min="0" max="100" value="50">
+    </div>
+
+    <!-- Hidden Audio Element -->
+    <audio id="background-music" preload="auto">
+        <source src="Karena.mp3" type="audio/mpeg">
+        <!-- Ganti dengan URL audio Feel Good Inc yang legal atau file lokal -->
+    </audio>
+
+    <script>
+        // Window Controls
+        document.getElementById('home-btn').addEventListener('click', () => {
+            location.reload();
+        });
+        document.getElementById('max-btn').addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.sendWindowControl('maximize');
+            }
+        });
+        document.getElementById('close-btn').addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.sendWindowControl('close');
+            }
+        });
+
+        // Audio Setup
+        const audio = document.getElementById('background-music');
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const volumeControl = document.getElementById('volume-control');
+
+        // Set initial volume
+        audio.volume = 0.5;
+
+        // Audio Controls
+        playBtn.addEventListener('click', () => {
+            audio.play();
+            startLyricsWithMusic();
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            audio.pause();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            audio.currentTime = 0;
+            audio.play();
+            restartLyrics();
+        });
+
+        volumeControl.addEventListener('input', (e) => {
+            audio.volume = e.target.value / 100;
+        });
+
+        // Lyrics Data
+        const lyrics = [
+            "",
+            "Karena kamu cantik",
+            "Kan ku beri segalanya apa yang ku punya",
+            "Dan hatimu baik",
+            "Sempurnalah duniaku saat kau disisiku",
+            "Bukan karena make up di wajahmu",
+            "Atau lipstik merah itu",
+            "Lembut hati tutur kata",
+            "Terciptalah cinta yang ku puja"
+        ];
+
+        const settings = [
+            { delay: 3000, speed: 0 },
+            { delay: 1300, speed: 90 },
+            { delay: 400, speed: 90 },
+            { delay: 1200, speed: 115 },
+            { delay: 10, speed: 110 },
+            { delay: 400, speed: 90 },
+            { delay: 1100, speed: 95 },
+            { delay: 400, speed: 100 },
+            { delay: 1000, speed: 95 }
+        ];
+
+        let index = 0;
+        let charIndex = 0;
+        let isTyping = false;
+        const display = document.getElementById('text');
+
+        function typeLine() {
+            if (index >= lyrics.length) {
+                display.textContent = "🎵 Karena kamu Cantik 🎵";
+                isTyping = false;
+                return;
+            }
+
+            const line = lyrics[index];
+            const config = settings[index];
+
+            if (charIndex < line.length) {
+                display.textContent += line.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeLine, config.speed);
+            } else {
+                index++;
+                charIndex = 0;
+                setTimeout(() => {
+                    display.textContent = '';
+                    typeLine();
+                }, config.delay);
+            }
+        }
+
+        function startLyricsWithMusic() {
+            if (!isTyping) {
+                isTyping = true;
+                index = 0;
+                charIndex = 0;
+                display.textContent = '';
+                
+                // Delay untuk sinkronisasi dengan musik (sesuaikan dengan timing 1:23)
+                setTimeout(() => {
+                    typeLine();
+                }, 1000); // 1 detik delay sebelum lyrics mulai
+            }
+        }
+
+        function restartLyrics() {
+            isTyping = false;
+            index = 0;
+            charIndex = 0;
+            display.textContent = '';
+            startLyricsWithMusic();
+        }
+
+        // Auto-start (opsional)
+        window.addEventListener('load', () => {
+            display.textContent = "🎵 Karena kamu CANTIK 🎵";
+            display.textContent = "-CR Nanashyi-";
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    if (audio.paused) {
+                        audio.play();
+                        startLyricsWithMusic();
+                    } else {
+                        audio.pause();
+                    }
+                    break;
+                case 'KeyR':
+                    restartLyrics();
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
